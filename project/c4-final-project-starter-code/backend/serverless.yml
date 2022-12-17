@@ -1,7 +1,5 @@
-app: hunghn-serverless-todo-app
-org: NgocHungSmartDev
 console: true
-service: hunghn-serverless-todo-app
+service: serverless-todo-app
 
 plugins:
   - serverless-webpack

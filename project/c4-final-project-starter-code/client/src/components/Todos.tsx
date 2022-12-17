@@ -40,31 +40,35 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     this.setState({ newTodoName: event.target.value })
   }
 
-  onEditButtonClick = (todoId: string) => {
-    this.props.history.push(`/todos/${todoId}/edit`)
+  onEditButtonClick = (id: string) => {
+    this.props.history.push(`/todos/${id}/edit`)
   }
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
       const dueDate = this.calculateDueDate()
-      const newTodo = await createTodo(this.props.auth.getIdToken(), {
-        name: this.state.newTodoName,
-        dueDate
-      })
-      this.setState({
-        todos: [...this.state.todos, newTodo],
-        newTodoName: ''
-      })
+      if (this.state.newTodoName.length > 0) {
+        const newTodo = await createTodo(this.props.auth.getIdToken(), {
+          name: this.state.newTodoName,
+          dueDate
+        })
+        this.setState({
+          todos: [...this.state.todos, newTodo],
+          newTodoName: ''
+        })
+      } else {
+        alert('Task name can\'t be empty');
+      }
     } catch {
       alert('Todo creation failed')
     }
   }
 
-  onTodoDelete = async (todoId: string) => {
+  onTodoDelete = async (id: string) => {
     try {
-      await deleteTodo(this.props.auth.getIdToken(), todoId)
+      await deleteTodo(this.props.auth.getIdToken(), id)
       this.setState({
-        todos: this.state.todos.filter(todo => todo.todoId !== todoId)
+        todos: this.state.todos.filter(todo => todo.id !== id)
       })
     } catch {
       alert('Todo deletion failed')
@@ -74,7 +78,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   onTodoCheck = async (pos: number) => {
     try {
       const todo = this.state.todos[pos]
-      await patchTodo(this.props.auth.getIdToken(), todo.todoId, {
+      await patchTodo(this.props.auth.getIdToken(), todo.id, {
         name: todo.name,
         dueDate: todo.dueDate,
         done: !todo.done
@@ -107,8 +111,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         <Header as="h1">TODOs</Header>
 
         {this.renderCreateTodoInput()}
-
-        {this.renderTodos()}
+        {this.state.todos.length > 0 && this.renderTodos()}
       </div>
     )
   }
@@ -161,7 +164,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       <Grid padded>
         {this.state.todos.map((todo, pos) => {
           return (
-            <Grid.Row key={todo.todoId}>
+            <Grid.Row key={todo.id}>
               <Grid.Column width={1} verticalAlign="middle">
                 <Checkbox
                   onChange={() => this.onTodoCheck(pos)}
@@ -178,7 +181,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 <Button
                   icon
                   color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
+                  onClick={() => this.onEditButtonClick(todo.id)}
                 >
                   <Icon name="pencil" />
                 </Button>
@@ -187,7 +190,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 <Button
                   icon
                   color="red"
-                  onClick={() => this.onTodoDelete(todo.todoId)}
+                  onClick={() => this.onTodoDelete(todo.id)}
                 >
                   <Icon name="delete" />
                 </Button>
